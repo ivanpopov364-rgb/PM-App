@@ -1,1 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>PM Help - Канбан</title>
+    <link rel="stylesheet" href="../design/css/main.css">
+    <link rel="stylesheet" href="../design/css/kanban.css">
+</head>
+<body>
+    <header class="top-bar">
+        <h1>PM Help: Канбан Отдела</h1>
+        <div class="filters">
+            <label>Фильтр по сотруднику:</label>
+            <select id="employee-filter">
+                <option value="all">Все</option>
+                <option value="emp1">Сотрудник 1</option>
+                <option value="emp2">Сотрудник 2</option>
+            </select>
+            <button id="add-task-btn">+ Создать задачу</button>
+        </div>
+    </header>
 
+    <div class="kanban-board">
+        <div class="kanban-column" id="col-backlog">
+            <h2>Бэклог</h2>
+            </div>
+
+        <div class="kanban-column" id="col-in-progress">
+            <h2>В работе</h2>
+        </div>
+
+        <div class="kanban-column" id="col-review">
+            <h2>На проверке</h2>
+        </div>
+
+        <div class="kanban-column" id="col-done">
+            <h2>Готово (KPI)</h2>
+        </div>
+    </div>
+
+    <div id="report-modal" style="display: none;">
+        <h3>Отчет о выполнении</h3>
+        <textarea placeholder="Резюме по задаче..."></textarea>
+        <input type="url" placeholder="Ссылки на результат">
+        <input type="file" placeholder="Скриншоты" multiple>
+        <button id="submit-review">Отправить руководителю</button>
+    </div>
+
+    <script src="kanban-logic.js"></script>
+</body>
+</html>

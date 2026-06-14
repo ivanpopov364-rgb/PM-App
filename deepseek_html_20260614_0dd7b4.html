@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сборщик промптов + Чат с расшифровкой</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- ЛЕВАЯ ПАНЕЛЬ: ЧАТ -->
+        <aside class="chat-panel">
+            <div class="chat-header">
+                <h2>💬 Чат (история текста)</h2>
+                <p class="note">Вводите заметки, описания, либо используйте распознавание речи</p>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <!-- История сообщений будет добавляться сюда -->
+            </div>
+            <div class="chat-input-area">
+                <textarea id="chatInput" rows="3" placeholder="Напишите сообщение..."></textarea>
+                <div class="chat-buttons">
+                    <button id="sendChatBtn" title="Отправить">📤 Отправить</button>
+                    <button id="startVoiceBtn" title="Распознать речь (микрофон)">🎤 Распознать</button>
+                    <button id="stopVoiceBtn" title="Остановить распознавание" disabled>⏹️ Стоп</button>
+                </div>
+                <p class="note">Распознавание работает только в Chrome/Edge/Safari, нужен доступ к микрофону.</p>
+            </div>
+        </aside>
+
+        <!-- ПРАВАЯ ПАНЕЛЬ: ВСЕ НАСТРОЙКИ (без изменений, только перенесены внутрь) -->
+        <main class="settings-panel">
+            <div class="container">
+                <h1>🧩 Сборщик промптов для lovable.dev</h1>
+
+                <div class="tabs">
+                    <button class="tab-button active" data-tab="tab1">Контекст и цели</button>
+                    <button class="tab-button" data-tab="tab2">Дизайн и цвета</button>
+                    <button class="tab-button" data-tab="tab3">Структура</button>
+                    <button class="tab-button" data-tab="tab4">Анимации</button>
+                    <button class="tab-button" data-tab="tab5">Дополнительно</button>
+                </div>
+
+                <form id="promptForm">
+                    <!-- Вкладка 1: Контекст и цели (копия из предыдущей версии) -->
+                    <div id="tab1" class="tab-content active">
+                        <fieldset>
+                            <legend>Контекст и цели</legend>
+                            <div class="form-group">
+                                <label>Тип сайта:</label>
+                                <label><input type="radio" name="siteType" value="Лендинг" checked> Лендинг</label>
+                                <label><input type="radio" name="siteType" value="Многостраничный"> Многостраничный</label>
+                            </div>
+                            <div class="form-group">
+                                <label for="projectName">Название проекта/бизнеса <span class="required">*</span>:</label>
+                                <input type="text" id="projectName" placeholder="Студия MegaGroup">
+                            </div>
+                            <div class="form-group">
+                                <label for="targetAudience">Целевая аудитория:</label>
+                                <input type="text" id="targetAudience" placeholder="малый бизнес">
+                            </div>
+                            <div class="form-group">
+                                <label>Главная цель сайта:</label>
+                                <div class="checkbox-group">
+                                    <label><input type="checkbox" name="siteGoals" value="привлечение клиентов"> Привлечение клиентов</label>
+                                    <label><input type="checkbox" name="siteGoals" value="информационный сайт"> Информационный сайт</label>
+                                    <label><input type="checkbox" name="siteGoals" value="показ портфолио"> Показ портфолио</label>
+                                    <label><input type="checkbox" name="siteGoals" value="визитка"> Визитка</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="tone">Тон коммуникации:</label>
+                                <select id="tone">
+                                    <option value="">-- Выберите --</option>
+                                    <option value="дружелюбный">Дружелюбный</option>
+                                    <option value="экспертный">Экспертный</option>
+                                    <option value="дерзкий">Дерзкий</option>
+                                    <option value="спокойный">Спокойный</option>
+                                    <option value="other">Другой</option>
+                                </select>
+                                <input type="text" id="toneOther" placeholder="Свой вариант" style="display:none;">
+                            </div>
+                        </fieldset>
+                    </div>
+
+                    <!-- Вкладка 2: Дизайн и цвета (сокращённо, но функционально) -->
+                    <div id="tab2" class="tab-content">
+                        <div class="form-group">
+                            <label for="style">Стилистика:</label>
+                            <input type="text" id="style" placeholder="Minimalist Modern">
+                            <select id="stylePreset">
+                                <option value="">-- Готовый стиль --</option>
+                                <option value="Minimalist Modern (Awwwards Style)">Minimalist Modern</option>
+                                <option value="Bento Grid (Apple/SaaS Style)">Bento Grid</option>
+                                <option value="Neo-Brutalism (Gumroad Style)">Neo-Brutalism</option>
+                                <option value="Glassmorphism (Futuristic/Tech)">Glassmorphism</option>
+                                <option value="custom">Свой вариант</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="references">Референсы:</label>
+                            <input type="url" id="references" placeholder="https://...">
+                        </div>
+                        <fieldset>
+                            <legend>🎨 Дизайн система</legend>
+                            <div class="color-row">
+                                <div class="color-item"><label>Основной цвет:</label><input type="color" id="colorPrimary" value="#3498db"><input type="text" id="colorPrimaryHex" value="#3498db"><label><input type="checkbox" id="colorPrimaryIgnore"> не учитывать</label></div>
+                                <div class="color-item"><label>Второстепенный:</label><input type="color" id="colorSecondary" value="#2ecc71"><input type="text" id="colorSecondaryHex" value="#2ecc71"><label><input type="checkbox" id="colorSecondaryIgnore"> не учитывать</label></div>
+                                <div class="color-item"><label>Акцентный:</label><input type="color" id="colorAccent" value="#e74c3c"><input type="text" id="colorAccentHex" value="#e74c3c"><label><input type="checkbox" id="colorAccentIgnore"> не учитывать</label></div>
+                            </div>
+                        </fieldset>
+                        <fieldset>
+                            <legend>🔤 Типографика</legend>
+                            <input type="text" id="headerFont" placeholder="Playfair Display">
+                            <input type="text" id="bodyFont" placeholder="Roboto">
+                            <button type="button" id="generateFontPair" style="background:#9b59b6;">🎲 Сгенерировать пару</button>
+                            <div class="font-preview-container" style="margin-top:15px;">
+                                <div class="preview-header" style="font-size:28px;">Заголовок</div>
+                                <div class="preview-body" style="font-size:18px;">Основной текст</div>
+                            </div>
+                        </fieldset>
+                    </div>
+
+                    <!-- Вкладка 3: Структура (с перетаскиванием) -->
+                    <div id="tab3" class="tab-content">
+                        <fieldset>
+                            <legend>Выберите блоки (Header и Footer фиксированы)</legend>
+                            <div class="checkbox-group" id="blocks-checkbox-group">
+                                <label><input type="checkbox" name="blocks" value="Hero (первый экран)"> Hero</label>
+                                <label><input type="checkbox" name="blocks" value="Преимущества / услуги"> Преимущества</label>
+                                <label><input type="checkbox" name="blocks" value="Портфолио / работы"> Портфолио</label>
+                                <label><input type="checkbox" name="blocks" value="О компании / команда"> О компании</label>
+                                <label><input type="checkbox" name="blocks" value="Отзывы / клиенты"> Отзывы</label>
+                                <label><input type="checkbox" name="blocks" value="Стоимость / тарифы"> Тарифы</label>
+                                <label><input type="checkbox" name="blocks" value="FAQ / вопросы"> FAQ</label>
+                                <label><input type="checkbox" name="blocks" value="Контакты и форма"> Контакты</label>
+                                <label><input type="checkbox" name="blocks" value="Квиз форма"> Квиз</label>
+                                <label><input type="checkbox" name="blocks" value="Карта"> Карта</label>
+                                <label><input type="checkbox" name="blocks" value="Блок До/после"> До/после</label>
+                            </div>
+                            <div class="form-group">
+                                <label>Добавить свой блок:</label>
+                                <div><input type="text" id="customBlockName" placeholder="Название"><button type="button" id="addCustomBlock">➕ Добавить</button></div>
+                            </div>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Порядок блоков (перетащите)</legend>
+                            <ul id="blocks-sortable" class="sortable-list"></ul>
+                        </fieldset>
+                    </div>
+
+                    <!-- Вкладка 4: Анимации -->
+                    <div id="tab4" class="tab-content">
+                        <fieldset>
+                            <legend>Ховер-эффекты</legend>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" name="hoverButtons" value="изменение цвета"> Кнопки: изменение цвета</label>
+                                <label><input type="checkbox" name="hoverButtons" value="появление обводки"> обводка</label>
+                                <label><input type="checkbox" name="hoverButtons" value="масштабирование"> масштаб</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" name="hoverCards" value="поднятие"> Карточки: поднятие</label>
+                                <label><input type="checkbox" name="hoverCards" value="тень"> тень</label>
+                                <label><input type="checkbox" name="hoverCards" value="граница"> граница</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" name="hoverImages" value="увеличение"> Изображения: увеличение</label>
+                                <label><input type="checkbox" name="hoverImages" value="затемнение"> затемнение</label>
+                                <label><input type="checkbox" name="hoverImages" value="цвет->ч/б"> ч/б</label>
+                            </div>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Тип верстки</legend>
+                            <label><input type="radio" name="scrollType" value="normal" checked> Обычный</label>
+                            <label><input type="radio" name="scrollType" value="snap"> Snap scrolling</label>
+                            <label><input type="radio" name="scrollType" value="slider"> Слайдерный скролл</label>
+                        </fieldset>
+                    </div>
+
+                    <!-- Вкладка 5: Дополнительно (без дублирования чата) -->
+                    <div id="tab5" class="tab-content">
+                        <fieldset>
+                            <legend>📄 Материалы заказчика</legend>
+                            <textarea id="services" rows="3" placeholder="Услуги..."></textarea>
+                            <textarea id="companyDesc" rows="3" placeholder="Описание компании..."></textarea>
+                        </fieldset>
+                        <fieldset>
+                            <legend>🖼️ Логотип</legend>
+                            <label><input type="checkbox" id="hasLogo"> Есть логотип</label>
+                        </fieldset>
+                        <fieldset>
+                            <legend>✨ Доп. пожелания</legend>
+                            <textarea id="extraWishes" rows="4" placeholder="Особые пожелания..."></textarea>
+                        </fieldset>
+                    </div>
+                </form>
+
+                <div style="margin-top: 20px;">
+                    <button type="button" id="generateBtn">Собрать промпт</button>
+                </div>
+                <div class="result" id="result" style="display: none;">
+                    <h2>Готовый промпт:</h2>
+                    <textarea id="promptOutput" rows="15" readonly></textarea>
+                    <button id="copyBtn">Копировать</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
